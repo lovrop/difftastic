@@ -313,8 +313,23 @@ fn style_lines(lines: &[&str], styles: &[(SingleLineSpan, Style)]) -> Vec<String
 pub(crate) fn novel_style(style: Style, side: Side, background: BackgroundColor) -> Style {
     if background.is_dark() {
         match side {
-            Side::Left => style.bright_red(),
-            Side::Right => style.bright_green(),
+            Side::Left => style.red().dimmed(),
+            Side::Right => style.green().dimmed(),
+        }
+    } else {
+        match side {
+            Side::Left => style.red(),
+            Side::Right => style.green(),
+        }
+    }
+}
+
+fn novel_word_style(style: Style, side: Side, background: BackgroundColor) -> Style {
+    if background.is_dark() {
+        match side {
+            // Side::Left => style.red().dimmed(),
+            Side::Left => style.bright_red().strikethrough(),
+            Side::Right => style.bright_green()/*.bg::<css::DarkGreen>()*/,
         }
     } else {
         match side {
@@ -356,7 +371,7 @@ pub(crate) fn color_positions(
                                 };
                             }
                             AtomKind::Keyword | AtomKind::Type => {
-                                style = style.bold();
+                                // style = style.bold();
                             }
                             AtomKind::TreeSitterError => style = style.purple(),
                             AtomKind::Normal => {}
@@ -365,7 +380,7 @@ pub(crate) fn color_positions(
                 }
             }
             MatchKind::Novel { highlight, .. } => {
-                style = novel_style(style, side, background);
+                style = novel_word_style(style, side, background);
                 if syntax_highlight
                     && matches!(
                         highlight,
@@ -374,14 +389,14 @@ pub(crate) fn color_positions(
                             | TokenKind::Atom(AtomKind::Type)
                     )
                 {
-                    style = style.bold();
+                    // style = style.bold();
                 }
                 if matches!(highlight, TokenKind::Atom(AtomKind::Comment)) {
                     style = style.italic();
                 }
             }
             MatchKind::NovelWord { highlight } => {
-                style = novel_style(style, side, background).bold();
+                style = novel_word_style(style, side, background);
 
                 // Underline novel words inside comments in code, but
                 // don't apply it to every single line in plaintext.
@@ -472,7 +487,7 @@ pub(crate) fn apply_line_number_color(
             // For changed lines, show the line number as red/green
             // and bold. This works well for syntactic diffs, where
             // most content is not bold.
-            style = novel_style(style, side, display_options.background_color).bold();
+            style = novel_style(style, side, display_options.background_color)/*.bold()*/;
         } else {
             // For unchanged lines, dim the line numbers so it's
             // clearly separate from the content.
